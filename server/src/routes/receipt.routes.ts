@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createReceiptHandler, getAllReceiptsHandler, getReceiptByIdHandler, updateReceiptHandler, deleteReceiptHandler, } from "../controllers/receipt..controllers";
+import { createReceiptHandler, getAllReceiptsHandler, getReceiptByIdHandler, updateReceiptHandler, deleteReceiptHandler, } from "../controllers/receipt.controllers";
 
 
 const router = Router();
