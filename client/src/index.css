@@ -1,0 +1,32 @@
+@import "tailwindcss";
+
+@media print {
+  nav,
+  button {
+    display: none !important;
+  }
+
+  body {
+    background: white !important;
+  }
+
+  .shadow-xl {
+    box-shadow: none !important;
+  }
+
+  .rounded-xl {
+    border-radius: 0 !important;
+  }
+}
+
+#root {
+  width: 100%;
+  max-width: 2500px;
+  margin: 0 auto;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+
