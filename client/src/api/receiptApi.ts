@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:2000/api",
+  baseURL: "https://motidom-ventures-limited-1.onrender.com",
 });
 
 export const createReceipt = (data: any) =>
