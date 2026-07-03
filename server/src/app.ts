@@ -8,7 +8,7 @@ const app = express();
 
 app.use(
   cors({
-    origin: "https://motidom-ventures-limited-1.onrender.com",
+    origin: "https://motidom-ventures-limited-lac.vercel.app",
     credentials: true,
   })
 );
