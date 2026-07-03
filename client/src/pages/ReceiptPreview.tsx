@@ -3,20 +3,12 @@ import { useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { getReceipt } from "../api/receiptApi";
 import type { Receipt } from "../types/receipt";
-// @ts-ignore
 import html2pdf from "html2pdf.js";
 
-const logo = "https://res.cloudinary.com/dsszhrke0/image/upload/v1781872184/Motidom_draft_logo_desktop_ns0uff.png";
-
 function ReceiptPreview() {
-  const formatCurrency = (amount?: number) =>
-    new Intl.NumberFormat("en-NG", {
-      style: "currency",
-      currency: "NGN",
-    }).format(amount ?? 0);
-
   const { id } = useParams();
   const receiptRef = useRef<HTMLDivElement>(null);
+
   const [receipt, setReceipt] = useState<Receipt | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -35,9 +27,40 @@ function ReceiptPreview() {
     fetchReceipt();
   }, [id]);
 
+  const formatCurrency = (amount: number | undefined) =>
+    new Intl.NumberFormat("en-NG", {
+      style: "currency",
+      currency: "NGN",
+    }).format(amount ?? 0);
+
+  const downloadPDF = () => {
+    if (!receiptRef.current) return;
+
+    html2pdf()
+      .set({
+        margin: 10,
+        filename: `${receipt?.receiptNumber}.pdf`,
+        image: {
+          type: "jpeg",
+          quality: 1,
+        },
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+        },
+        jsPDF: {
+          unit: "mm",
+          format: "a4",
+          orientation: "portrait",
+        },
+      })
+      .from(receiptRef.current)
+      .save();
+  };
+
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
+      <div className="flex justify-center items-center min-h-screen text-xl">
         Loading...
       </div>
     );
@@ -45,182 +68,185 @@ function ReceiptPreview() {
 
   if (!receipt) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
+      <div className="flex justify-center items-center min-h-screen text-xl">
         Receipt not found.
       </div>
     );
   }
 
-  const downloadPDF = () => {
-    if (!receiptRef.current) return;
-
-    const element = receiptRef.current;
-
-    const options = {
-      margin: 10,
-      filename: `Receipt-${receipt?.receiptNumber}.pdf`,
-      image: { type: "jpeg" as const, quality: 1 },
-      html2canvas: {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: "#ffffff",
-      },
-      jsPDF: {
-        unit: "mm" as const,
-        format: "a4",
-        orientation: "portrait" as const,
-      },
-    };
-
-    html2pdf().set(options).from(element).save();
-  };
-
-  // Plain RGB colors used instead of Tailwind color classes inside the
-  // receipt, since Tailwind v4's oklch() colors aren't parseable by html2canvas.
-  const colors = {
-    purple700: "rgb(126, 34, 206)",
-    purple50: "rgb(250, 245, 255)",
-    gray50: "rgb(249, 250, 251)",
-    gray500: "rgb(107, 114, 128)",
-    gray600: "rgb(75, 85, 99)",
-    border: "rgb(229, 231, 235)",
-    white: "rgb(255, 255, 255)",
-  };
-
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-gray-100 py-10 px-4">
+
+      <div className="bg-gray-100 min-h-screen py-10 px-4">
+
         <div
           ref={receiptRef}
-          className="max-w-3xl mx-auto shadow-xl rounded-xl p-8"
-          style={{ backgroundColor: colors.white }}
+          className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-8"
         >
-          <div className="flex flex-col items-center mb-8">
+          {/* Logo */}
+
+          <div className="flex justify-center mb-4">
             <img
-              src={logo}
-              alt="Motidom Ventures"
-              className="w-28 mb-3"
-              crossOrigin="anonymous"
+              src="https://res.cloudinary.com/dsszhrke0/image/upload/v1781872184/Motidom_draft_logo_desktop_ns0uff.png"
+              alt="Motidom Logo"
+              className="w-28"
             />
-
-            <h1
-              className="text-3xl font-bold"
-              style={{ color: colors.purple700 }}
-            >
-              Motidom Ventures Limited
-            </h1>
-
-            <p style={{ color: colors.gray500 }}>Professional Receipt</p>
-
-            <div
-              className="mt-3 text-center text-sm space-y-1"
-              style={{ color: colors.gray500 }}
-            >
-              <p>📍 19 Adesoye Street, Mende, Maryland, Lagos </p>
-              <p>📞 +234 805 075 9829</p>
-              <p>📧 info@motidomventures.com</p>
-            </div>
           </div>
 
-          <div
-            className="grid grid-cols-2 gap-2 mb-8 border rounded-lg p-5"
-            style={{ backgroundColor: colors.gray50, borderColor: colors.border }}
-          >
+          {/* Company */}
+
+          <h1 className="text-3xl font-bold text-center text-purple-700">
+            MOTIDOM VENTURES
+          </h1>
+
+          <p className="text-center text-gray-600">
+            123 Example Street, Lagos, Nigeria
+          </p>
+
+          <p className="text-center text-gray-600">
+            Phone: +234 801 234 5678
+          </p>
+
+          <hr className="my-6" />
+
+          <div className="grid grid-cols-2 gap-4 mb-8">
+
             <div>
-              <p className="font-semibold">Receipt No</p>
+              <h3 className="font-semibold">Receipt No</h3>
               <p>{receipt.receiptNumber}</p>
             </div>
 
             <div>
-              <p className="font-semibold">Date</p>
-              <p>{new Date(receipt.createdAt).toLocaleString("en-NG")}</p>
+              <h3 className="font-semibold">Date</h3>
+              <p>
+                {new Date(receipt.createdAt as string).toLocaleDateString()}
+              </p>
             </div>
 
             <div>
-              <p className="font-semibold">Payment</p>
-              <p>{receipt.paymentMethod}</p>
-            </div>
-
-            <div>
-                <p className="font-semibold">Customer</p>
+              <h3 className="font-semibold">Customer</h3>
               <p>{receipt.customerName}</p>
             </div>
 
             <div>
-              <p className="font-semibold">Phone</p>
+              <h3 className="font-semibold">Phone</h3>
               <p>{receipt.customerPhone}</p>
             </div>
+
+            <div>
+              <h3 className="font-semibold">Payment Method</h3>
+              <p>{receipt.paymentMethod}</p>
+            </div>
+
           </div>
 
-          <table className="w-full border" style={{ borderColor: colors.border }}>
-            <thead style={{ backgroundColor: colors.purple700, color: colors.white }}>
+          {/* Items */}
+
+          <table className="w-full border-collapse border">
+
+            <thead className="bg-purple-700 text-white">
+
               <tr>
-                <th className="p-3">Description</th>
-                <th>Qty</th>
-                <th>Price</th>
-                <th>Total</th>
+                <th className="border p-3">Description</th>
+                <th className="border p-3">Qty</th>
+                <th className="border p-3">Unit Price</th>
+                <th className="border p-3">Total</th>
               </tr>
+
             </thead>
 
             <tbody>
+
               {receipt.items.map((item, index) => (
-                <tr
-                  key={index}
-                  className="text-center border-b"
-                  style={{ borderColor: colors.border }}
-                >
-                  <td className="p-3">{item.description}</td>
-                  <td>{item.quantity}</td>
-                  <td>{formatCurrency(item.unitPrice)}</td>
-                  <td>{formatCurrency(item.total)}</td>
+
+                <tr key={index}>
+
+                  <td className="border p-3">
+                    {item.description}
+                  </td>
+
+                  <td className="border text-center">
+                    {item.quantity}
+                  </td>
+
+                  <td className="border text-center">
+                    {formatCurrency(item.unitPrice)}
+                  </td>
+
+                  <td className="border text-center">
+                    {formatCurrency(item.total)}
+                  </td>
+
                 </tr>
+
               ))}
+
             </tbody>
+
           </table>
 
-          <div
-            className="mt-8 ml-auto w-72 border rounded-lg p-5 space-y-3"
-            style={{ backgroundColor: colors.purple50, borderColor: colors.border }}
-          >
-            <p>
-              <strong>Subtotal:</strong> {formatCurrency(receipt.subtotal)}
-            </p>
+          {/* Totals */}
 
-            <p>
-              <strong>Discount:</strong> {formatCurrency(receipt.discount)}
-            </p>
+          <div className="mt-8 flex justify-end">
 
-            <p className="text-2xl font-bold" style={{ color: colors.purple700 }}>
-              Total: {formatCurrency(receipt.total)}
-            </p>
+            <div className="w-72 space-y-2">
+
+              <div className="flex justify-between">
+                <span>Subtotal</span>
+                <span>{formatCurrency(receipt.subtotal)}</span>
+              </div>
+
+              <div className="flex justify-between">
+                <span>Discount</span>
+                <span>{formatCurrency(receipt.discount)}</span>
+              </div>
+
+              <div className="flex justify-between text-xl font-bold text-purple-700 border-t pt-2">
+                <span>Total</span>
+                <span>{formatCurrency(receipt.total)}</span>
+              </div>
+
+            </div>
+
           </div>
 
-          <div
-            className="border-t mt-10 pt-6 text-center"
-            style={{ borderColor: colors.border, color: colors.gray600 }}
-          >
-            <p className="font-semibold">Thank you for your patronage!</p>
-            <p className="text-sm mt-2">Motidom Ventures</p>
+          {/* Footer */}
+
+          <div className="text-center mt-10">
+
+            <p className="font-semibold text-purple-700">
+              Thank you for your patronage!
+            </p>
+
+            <p className="text-sm text-gray-500 mt-2">
+              Powered by Motidom Ventures
+            </p>
+
           </div>
 
-          <div className="flex gap-4 mt-10">
-            <button
-              onClick={() => window.print()}
-              className="flex-1 text-white py-3 rounded-lg"
-              style={{ backgroundColor: colors.purple700 }}
-            >
-              Print
-            </button>
-
-            <button
-              onClick={downloadPDF}
-              className="flex-1 bg-green-600 text-white py-3 rounded-lg hover:bg-green-700"
-            >
-              Download PDF
-            </button>
-          </div>
         </div>
+
+        {/* Buttons */}
+
+        <div className="max-w-4xl mx-auto flex gap-4 mt-6">
+
+          <button
+            onClick={() => window.print()}
+            className="flex-1 bg-purple-700 text-white py-3 rounded-lg hover:bg-purple-800"
+          >
+            Print Receipt
+          </button>
+
+          <button
+            onClick={downloadPDF}
+            className="flex-1 bg-green-600 text-white py-3 rounded-lg hover:bg-green-700"
+          >
+            Download PDF
+          </button>
+
+        </div>
+
       </div>
     </>
   );
